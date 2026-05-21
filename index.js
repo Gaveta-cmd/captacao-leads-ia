@@ -270,7 +270,7 @@ Documentos: ${leadData.documentos || 'Nenhum'}
 RETORNE APENAS ESTE JSON, SEM MARKDOWN, SEM BACKTICKS, SEM EXPLICAÇÃO:
 {"viabilidade":"Alta","tipo_acao":"Ação Ordinária de Concessão","probabilidade_sucesso":75,"documentos_necessarios":["Doc1","Doc2"],"prazo_estimado":"18-24 meses","alertas":["Alerta1"],"proximos_passos":["Passo1"]}
 
-Responda APENAS com JSON válido em uma única linha. Sem ```, sem md, apenas JSON.`;
+Responda APENAS com JSON válido em uma única linha. Nada de marcação.`;
 
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
