@@ -259,24 +259,18 @@ const enrichLeadData = (lead) => {
 
 const triageWithAI = async (leadData) => {
   try {
-    const prompt = `Você é um assistente jurídico especializado em direito previdenciário. Analise este caso e forneça resposta estruturada EM JSON:
+    const prompt = `Você é um assistente jurídico especializado em direito previdenciário.
 
-DADOS DO CLIENTE:
-- Nome: ${leadData.nome}
-- Tipo de caso: ${leadData.tipo_caso}
-- Descrição: ${leadData.descricao}
-- Documentos: ${leadData.documentos || 'Não informado'}
+ANÁLISE OBRIGATÓRIA:
+Cliente: ${leadData.nome}
+Caso: ${leadData.tipo_caso}
+Descrição: ${leadData.descricao}
+Documentos: ${leadData.documentos || 'Nenhum'}
 
-RESPONDA APENAS COM JSON VÁLIDO, nada mais. Use exatamente esta estrutura:
-{
-  "viabilidade": "Alta",
-  "tipo_acao": "Ação Ordinária de Concessão",
-  "probabilidade_sucesso": 75,
-  "documentos_necessarios": ["Doc1", "Doc2"],
-  "prazo_estimado": "18-24 meses",
-  "alertas": ["Alerta1"],
-  "proximos_passos": ["Passo1", "Passo2"]
-}`;
+RETORNE APENAS ESTE JSON, SEM MARKDOWN, SEM BACKTICKS, SEM EXPLICAÇÃO:
+{"viabilidade":"Alta","tipo_acao":"Ação Ordinária de Concessão","probabilidade_sucesso":75,"documentos_necessarios":["Doc1","Doc2"],"prazo_estimado":"18-24 meses","alertas":["Alerta1"],"proximos_passos":["Passo1"]}
+
+Responda APENAS com JSON válido em uma única linha. Sem ```, sem md, apenas JSON.`;
 
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
@@ -292,7 +286,17 @@ RESPONDA APENAS COM JSON VÁLIDO, nada mais. Use exatamente esta estrutura:
       }
     );
 
-    const content = response.data.choices[0].message.content;
+    let content = response.data.choices[0].message.content.trim();
+
+    // Limpar markdown se vier com backticks
+    content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    // Extrair JSON se estiver dentro de outras coisas
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      content = jsonMatch[0];
+    }
+
     const triageResult = JSON.parse(content);
 
     return { sucesso: true, dados: triageResult };
